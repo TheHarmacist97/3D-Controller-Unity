@@ -6,9 +6,9 @@ using UnityEngine;
 public class MovementScript : MonoBehaviour
 {
     [Header("References")]
+    [SerializeField] private Collider coll;
     [SerializeField] private Rigidbody rb;
-    [SerializeField] private float moveSpeed = 6f;
-    [SerializeField] private float drag;
+    [SerializeField, Range(1, 100)] private float moveSpeed = 6f, drag;
     [SerializeField] private Transform camTransform;
 
     #region Planar Movement
@@ -17,15 +17,64 @@ public class MovementScript : MonoBehaviour
     #endregion
 
     #region Mouse Movement
+    [SerializeField, Range(0.01f, 3f)] private float sensX = 1f, sensY = 1f;
+    private bool jumpSignal;
     private float mouseX, mouseY;
-    [SerializeField] private float sensX = 1f, sensY = 1f;
     private float xRotation, yRotation;
     #endregion
+
+    #region Jump
+    [SerializeField, Range(1, 5)] private int jumps;
+    [SerializeField, Range(1, 100)] private float jumpForce;
+    [SerializeField] private int currentJumps;
+    [SerializeField] private bool isGrounded;
+    [SerializeField] private bool groundedStateChange;
+    private float halfHeight;
+    #endregion
+
+    Ray groundCheckRay;
+
+    public bool IsGrounded { get => isGrounded; 
+        set 
+        {
+            if(value != isGrounded)
+            {
+                GroundedStateChange = true;
+            }
+            else
+            {
+                GroundedStateChange = false;
+            }
+            isGrounded = value;
+        }
+    }
+
+    public bool GroundedStateChange { get => groundedStateChange; 
+        set
+        {
+            if(value)
+            {
+                if(!isGrounded)
+                {
+                    currentJumps = 0;
+                }
+                else
+                {
+                    if(!jumpSignal)
+                        currentJumps++;
+                }
+            }
+            groundedStateChange = value;
+
+        }
+    }
 
     private void Awake()
     {
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+
+        halfHeight = coll.bounds.extents.y;
     }
 
     private void Start()
@@ -37,6 +86,8 @@ public class MovementScript : MonoBehaviour
     {
         GetInput();
         ControlDrag();
+        groundCheckRay = new Ray(transform.position, -transform.up);
+        IsGrounded = Physics.Raycast(groundCheckRay, halfHeight + 0.01f);
     }
 
     private void LateUpdate()
@@ -52,20 +103,40 @@ public class MovementScript : MonoBehaviour
 
     private void GetInput()
     {
+        //Planar movement
         horizontalMovement = Input.GetAxisRaw("Horizontal");
         verticalMovement = Input.GetAxisRaw("Vertical");
         moveDirection = transform.forward * verticalMovement + transform.right * horizontalMovement;
-
+        
+        //Mouse look
         mouseX = Input.GetAxisRaw("Mouse X");
         mouseY = Input.GetAxisRaw("Mouse Y");
         yRotation += mouseX * sensX;
         xRotation -= mouseY * sensY;
 
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
+
+        //Jump
+        if(Input.GetButtonDown("Jump"))
+        {
+            if(currentJumps<jumps)
+            {
+                jumpSignal = true;
+                currentJumps++;
+            }
+        }
+        
     }
 
     private void FixedUpdate()
     {
         rb.AddForce(moveDirection.normalized * moveSpeed, ForceMode.Acceleration);
+
+        if(jumpSignal )
+        {
+            rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+            jumpSignal = false;
+        }
+
     }
 }
