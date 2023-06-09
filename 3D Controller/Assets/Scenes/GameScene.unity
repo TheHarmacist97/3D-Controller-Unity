@@ -383,15 +383,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   coll: {fileID: 242489725}
   rb: {fileID: 242489724}
-  moveSpeed: 50
-  drag: 4
+  moveSpeed: 32.8
+  drag: 1
   camTransform: {fileID: 330585546}
   sensX: 1
   sensY: 1
-  isGrounded: 0
   jumps: 3
-  jumpForce: 50
+  jumpForce: 19.1
   currentJumps: 0
+  isGrounded: 0
+  groundedStateChange: 0
 --- !u!54 &242489724
 Rigidbody:
   m_ObjectHideFlags: 0

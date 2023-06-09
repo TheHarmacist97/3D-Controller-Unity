@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class MovementScript : MonoBehaviour
@@ -18,7 +16,6 @@ public class MovementScript : MonoBehaviour
 
     #region Mouse Movement
     [SerializeField, Range(0.01f, 3f)] private float sensX = 1f, sensY = 1f;
-    private bool jumpSignal;
     private float mouseX, mouseY;
     private float xRotation, yRotation;
     #endregion
@@ -29,39 +26,41 @@ public class MovementScript : MonoBehaviour
     [SerializeField] private int currentJumps;
     [SerializeField] private bool isGrounded;
     [SerializeField] private bool groundedStateChange;
+    [SerializeField] private bool alreadyIncremented;
+    private bool jumpSignal;
     private float halfHeight;
     #endregion
 
     Ray groundCheckRay;
 
-    public bool IsGrounded { get => isGrounded; 
-        set 
+    public bool IsGrounded
+    {
+        get => isGrounded;
+        set
         {
-            if(value != isGrounded)
-            {
-                GroundedStateChange = true;
-            }
-            else
-            {
-                GroundedStateChange = false;
-            }
+            GroundedStateChange = value != isGrounded;
             isGrounded = value;
         }
     }
 
-    public bool GroundedStateChange { get => groundedStateChange; 
+    public bool GroundedStateChange
+    {
+        get => groundedStateChange;
         set
         {
-            if(value)
+            if (value)
             {
-                if(!isGrounded)
+                if (!isGrounded)
                 {
                     currentJumps = 0;
+                    alreadyIncremented = false;
                 }
                 else
                 {
-                    if(!jumpSignal)
+                    if (!alreadyIncremented)
+                    {
                         currentJumps++;
+                    }
                 }
             }
             groundedStateChange = value;
@@ -92,7 +91,7 @@ public class MovementScript : MonoBehaviour
 
     private void LateUpdate()
     {
-        camTransform.localRotation = Quaternion.Euler(xRotation,0, 0);
+        camTransform.localRotation = Quaternion.Euler(xRotation, 0, 0);
         transform.rotation = Quaternion.Euler(0, yRotation, 0);
     }
 
@@ -107,7 +106,7 @@ public class MovementScript : MonoBehaviour
         horizontalMovement = Input.GetAxisRaw("Horizontal");
         verticalMovement = Input.GetAxisRaw("Vertical");
         moveDirection = transform.forward * verticalMovement + transform.right * horizontalMovement;
-        
+
         //Mouse look
         mouseX = Input.GetAxisRaw("Mouse X");
         mouseY = Input.GetAxisRaw("Mouse Y");
@@ -117,22 +116,23 @@ public class MovementScript : MonoBehaviour
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
 
         //Jump
-        if(Input.GetButtonDown("Jump"))
+        if (Input.GetButtonDown("Jump"))
         {
-            if(currentJumps<jumps)
+            if (currentJumps < jumps)
             {
                 jumpSignal = true;
                 currentJumps++;
+                alreadyIncremented = true;
             }
         }
-        
+
     }
 
     private void FixedUpdate()
     {
         rb.AddForce(moveDirection.normalized * moveSpeed, ForceMode.Acceleration);
 
-        if(jumpSignal )
+        if (jumpSignal)
         {
             rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
             jumpSignal = false;
