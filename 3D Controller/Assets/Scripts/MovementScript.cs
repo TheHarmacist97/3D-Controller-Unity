@@ -25,9 +25,6 @@ public class MovementScript : MonoBehaviour
     [SerializeField, Range(1, 100)] private float jumpForce;
     [SerializeField] private int currentJumps;
     [SerializeField] private bool isGrounded;
-    [SerializeField] private bool groundedStateChange;
-    [SerializeField] private bool alreadyIncremented;
-    private bool jumpSignal;
     private float halfHeight;
     #endregion
 
@@ -38,33 +35,21 @@ public class MovementScript : MonoBehaviour
         get => isGrounded;
         set
         {
-            GroundedStateChange = value != isGrounded;
-            isGrounded = value;
-        }
-    }
-
-    public bool GroundedStateChange
-    {
-        get => groundedStateChange;
-        set
-        {
-            if (value)
+            if(value != isGrounded)
             {
                 if (!isGrounded)
                 {
                     currentJumps = 0;
-                    alreadyIncremented = false;
                 }
                 else
                 {
-                    if (!alreadyIncremented)
+                    if (currentJumps == 0)
                     {
                         currentJumps++;
                     }
                 }
             }
-            groundedStateChange = value;
-
+            isGrounded = value;
         }
     }
 
@@ -120,9 +105,8 @@ public class MovementScript : MonoBehaviour
         {
             if (currentJumps < jumps)
             {
-                jumpSignal = true;
+                rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
                 currentJumps++;
-                alreadyIncremented = true;
             }
         }
 
@@ -131,12 +115,6 @@ public class MovementScript : MonoBehaviour
     private void FixedUpdate()
     {
         rb.AddForce(moveDirection.normalized * moveSpeed, ForceMode.Acceleration);
-
-        if (jumpSignal)
-        {
-            rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
-            jumpSignal = false;
-        }
 
     }
 }
