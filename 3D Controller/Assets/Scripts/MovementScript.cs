@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class MovementScript : MonoBehaviour
@@ -70,7 +69,8 @@ public class MovementScript : MonoBehaviour
     {
         GetInput();
         ControlDrag();
-        groundCheckRay = new Ray(transform.position, -transform.up);
+        var characterTransform = transform;
+        groundCheckRay = new Ray(characterTransform.position, -characterTransform.up);
         IsGrounded = Physics.Raycast(groundCheckRay, halfHeight + 0.01f);
     }
 
@@ -90,7 +90,8 @@ public class MovementScript : MonoBehaviour
         //Planar movement
         horizontalMovement = Input.GetAxisRaw("Horizontal");
         verticalMovement = Input.GetAxisRaw("Vertical");
-        moveDirection = transform.forward * verticalMovement + transform.right * horizontalMovement;
+        var characterTransform = transform;
+        moveDirection = characterTransform.forward * verticalMovement + characterTransform.right * horizontalMovement;
 
         //Mouse look
         mouseX = Input.GetAxisRaw("Mouse X");
@@ -101,14 +102,12 @@ public class MovementScript : MonoBehaviour
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
 
         //Jump
-        if (Input.GetButtonDown("Jump"))
-        {
-            if (currentJumps < jumps)
-            {
-                rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
-                currentJumps++;
-            }
-        }
+        if (!Input.GetButtonDown("Jump")) return;
+        
+        if (currentJumps >= jumps) return;
+        
+        rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+        currentJumps++;
 
     }
 
